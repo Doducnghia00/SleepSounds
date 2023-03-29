@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SleepSounds</string>
+    <string name="rainy">Rain</string>
+    <string name="thunderstorm">Thunderstorm</string>
+    <string name="wind">Wind</string>
+    <string name="rain_on_leaves">Rain on leaves</string>
 </resources>

@@ -1,86 +1,113 @@
 package com.doducnghia00.sleepsounds
 
+import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build.VERSION_CODES.O
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.Toast
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener, MediaPlayer.OnPreparedListener{
 
-    lateinit  var play : ImageButton
-    lateinit  var pause : ImageButton
-    lateinit  var stop : ImageButton
-    lateinit  var next : ImageButton
-    lateinit  var previous : ImageButton
-    lateinit  var mediaPlayer : MediaPlayer
+    lateinit  var rain :ImageButton
+    lateinit  var thunderstorm :ImageButton
+    lateinit  var rainLeaves :ImageButton
+    lateinit  var wind :ImageButton
 
-    lateinit var seekTime : SeekBar
+    lateinit  var mediaPlayer1 : MediaPlayer
+    lateinit  var mediaPlayer2 : MediaPlayer
+    lateinit  var mediaPlayer3 : MediaPlayer
+    lateinit  var mediaPlayer4 : MediaPlayer
+
     lateinit var seekVol : SeekBar
 
     lateinit var audioManager : AudioManager
-    lateinit var runnable : Runnable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //Initializing views
         initView()
+        addSounds()
 
-        //create an ArrayList songs
+        rain.setOnClickListener(this)
+        thunderstorm.setOnClickListener(this)
+        rainLeaves.setOnClickListener(this)
+        wind.setOnClickListener(this)
 
-
-        mediaPlayer = MediaPlayer.create(this, R.raw.thunderstorm)
-
-        play.setOnClickListener(this)
-        pause.setOnClickListener(this)
-        stop.setOnClickListener(this)
-        next.setOnClickListener(this)
-        previous.setOnClickListener(this)
 
     }
 
-    private fun initView() {
-        play = findViewById(R.id.play)
-        pause = findViewById(R.id.pause)
-        stop  = findViewById(R.id.stop)
-        next = findViewById(R.id.next)
-        previous = findViewById(R.id.previous)
+    private fun addSounds() {
+        mediaPlayer1 = MediaPlayer.create(this, R.raw.rain_main)
+        mediaPlayer1.isLooping = true
+        mediaPlayer2 = MediaPlayer.create(this, R.raw.thunderstorm)
+        mediaPlayer2.isLooping = true
+        mediaPlayer3 = MediaPlayer.create(this, R.raw.rain_on_leaves)
+        mediaPlayer3.isLooping = true
+        mediaPlayer4 = MediaPlayer.create(this, R.raw.wind)
+        mediaPlayer4.isLooping = true
+    }
 
-        seekTime = findViewById(R.id.seekBarTime)
-        seekVol = findViewById(R.id.seekBarVol)
+    private fun initView() {
+        rain = findViewById(R.id.rainy)
+        thunderstorm = findViewById(R.id.thunderstorm)
+        rainLeaves = findViewById(R.id.rainOnLeaves)
+        wind = findViewById(R.id.wind)
     }
 
     override fun onClick(p0: View?) {
         when(p0){
-            play ->{
-                if(!mediaPlayer.isPlaying){
-                    mediaPlayer.start()
+            rain -> {
+                if (!mediaPlayer1.isPlaying){
+                    mediaPlayer1.start()
+                    rain.setBackgroundResource(R.drawable.button_bg_selected)
+                }else{
+                    mediaPlayer1.stop()
+                    mediaPlayer1.prepare()
+                    rain.setBackgroundResource(R.drawable.button_bg)
                 }
             }
-            pause ->{
-                if(mediaPlayer.isPlaying){
-                    mediaPlayer.pause()
+            thunderstorm -> {
+                if (!mediaPlayer2.isPlaying){
+                    mediaPlayer2.start()
+                    thunderstorm.setBackgroundResource(R.drawable.button_bg_selected)
+                }else{
+                    mediaPlayer2.stop()
+                    mediaPlayer2.prepare()
+                    thunderstorm.setBackgroundResource(R.drawable.button_bg)
                 }
             }
-            stop->{
-                if(mediaPlayer.isPlaying){
-                    mediaPlayer.stop()
-                    mediaPlayer.prepare()
+            rainLeaves -> {
+                if (!mediaPlayer3.isPlaying){
+                    mediaPlayer3.start()
+                    rainLeaves.setBackgroundResource(R.drawable.button_bg_selected)
+                }else{
+                    mediaPlayer3.stop()
+                    mediaPlayer3.prepare()
+                    rainLeaves.setBackgroundResource(R.drawable.button_bg)
                 }
             }
-            next->{
-
-            }
-            previous->{
-
+            wind -> {
+                if (!mediaPlayer4.isPlaying){
+                    mediaPlayer4.start()
+                    wind.setBackgroundResource(R.drawable.button_bg_selected)
+                }else{
+                    mediaPlayer4.stop()
+                    mediaPlayer4.prepare()
+                    wind.setBackgroundResource(R.drawable.button_bg)
+                }
             }
         }
+    }
+
+    override fun onPrepared(p0: MediaPlayer?) {
+        //TODO("Not yet implemented")
     }
 
 

@@ -8,9 +8,11 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.doducnghia00.sleepsounds.R;
 import com.doducnghia00.sleepsounds.adapter.SoundAdapter;
@@ -62,6 +64,14 @@ public class BlankFragment extends Fragment {
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 4);
         recyclerView.setLayoutManager(gridLayoutManager);
+
+        soundAdapter.setOnItemClickListener(new SoundAdapter.onItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                Toast.makeText(getContext(), "Click " + position, Toast.LENGTH_LONG).show();
+                Log.e("Test","Clicked");
+            }
+        });
     }
 
     private List<Sound> getListSound() {

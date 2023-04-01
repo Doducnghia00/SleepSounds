@@ -11,9 +11,14 @@ public class Test {
 
 
     public static void main(String[] args) {
-        List<Sound> list = new ArrayList<>();
-        Sound sound = new Sound(1,"Mot",1,1);
-        list.add(sound);
+
+        boolean A[] = new boolean[20];
+        for (int i = 0; i < A.length; i++) {
+            if(A[i] ){
+
+                break;
+            }
+        }
     }
 
 }

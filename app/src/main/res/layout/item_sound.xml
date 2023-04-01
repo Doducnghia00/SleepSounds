@@ -14,12 +14,14 @@
         android:gravity="center"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp">
-        <ImageButton
+        <ImageView
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:background="@drawable/button_bg"
             android:src="@drawable/rainy"
-            android:id="@+id/iconSound" />
+            android:id="@+id/iconSound"
+            android:scaleType="fitXY"
+            android:padding="10dp"/>
         <TextView
             android:id="@+id/nameSound"
             android:layout_width="wrap_content"

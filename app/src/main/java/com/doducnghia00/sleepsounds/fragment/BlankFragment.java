@@ -1,5 +1,7 @@
 package com.doducnghia00.sleepsounds.fragment;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -12,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.doducnghia00.sleepsounds.R;
@@ -25,6 +28,9 @@ import java.util.List;
 public class BlankFragment extends Fragment {
     private  RecyclerView recyclerView;
     private SoundAdapter soundAdapter;
+
+    private SeekBar seekVol;
+    private AudioManager audioManager;
 
 
 
@@ -72,6 +78,10 @@ public class BlankFragment extends Fragment {
                 Log.e("Test","Clicked");
             }
         });
+
+        //Control volume with seekBar
+        seekVol = view.findViewById(R.id.seekVol);
+        audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
     }
 
     private List<Sound> getListSound() {
@@ -88,5 +98,11 @@ public class BlankFragment extends Fragment {
 
 
         return list;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        soundAdapter.stopAllMP();
     }
 }

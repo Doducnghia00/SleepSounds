@@ -26,15 +26,12 @@ class SecondFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     private var recyclerView : RecyclerView?= null
     private lateinit var soundAdapter : SoundAdapter
     private lateinit var list: List<Sound>
-    private val mPlayer  = arrayOf(-1, -1, -1, -1)
-    private lateinit var runningList : BooleanArray
-    private lateinit var mediaPlayer : MediaPlayer
-    private lateinit var mediaPlayer1 : MediaPlayer
-    private lateinit var mediaPlayer2 : MediaPlayer
-    private lateinit var mediaPlayer3 : MediaPlayer
 
-    private lateinit var seekVol : SeekBar
-    private lateinit var audioManager: AudioManager
+    private var listener: MyFragmentListener? = null
+    private lateinit var runningList : BooleanArray
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,16 +47,16 @@ class SecondFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initMedia()
+        Log.e("Test","Fragment 2")
 
         soundAdapter = SoundAdapter(requireContext())
 
 
         list = getListSound()
-        runningList = BooleanArray(list.size)
 
+        runningList = listener?.getRunningList() ?: BooleanArray(list.size)
 
-        soundAdapter.setData(list)
+        soundAdapter.setData(list, runningList)
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView?.adapter = soundAdapter
 
@@ -68,106 +65,20 @@ class SecondFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
         soundAdapter.setOnItemClickListener(object : SoundAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
-                Toast.makeText(context, "Click ${list[position].name}", Toast.LENGTH_LONG).show()
-                Log.e("Test","Clicked position $position")
-
-                //If sound is running
-                if (runningList[position]){
-                    Log.e("Test", "Sound is running -> Try stop sound")
-                    runningList[position] = false
-                    if (stopSound(position)) Log.e("Test", "Stopper sound")
-                }else{ // If sound isn't running
-                    Log.e("Test", "Sound isn't running -> Try play sound")
-
-                    if (!playSound(position)){
-                        Log.e("Test","Error! Media Player Full!")
-                    }else{
-                        runningList[position] = true
-                        Log.e("Test","Played sound")
-                    }
-                }
-                Log.e("Test", "Media Player: ${mPlayer[0]} ${mPlayer[1]} ${mPlayer[2]} ${mPlayer[3]}")
-                Log.e("Test", "==================")
+                Log.e("Test", "Fragment 2 clicked $position")
+                listener?.onSoundClick(position)
+                soundAdapter.setData(list, listener!!.getRunningList())
             }
 
         })
 
 
-        // Control volume with seekBar
-        seekVol = view.findViewById(R.id.seekVol)
-        audioManager = context?.getSystemService(AUDIO_SERVICE) as AudioManager
 
-        val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        seekVol.max = maxVol
-
-        val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        seekVol.progress = curVol
-
-        seekVol.setOnSeekBarChangeListener(this)
-    }
-
-    private fun initMedia() {
-        mediaPlayer = MediaPlayer.create(context,R.raw.rain_main)
-        mediaPlayer1 = MediaPlayer.create(context,R.raw.rain_main)
-        mediaPlayer2 = MediaPlayer.create(context,R.raw.rain_main)
-        mediaPlayer3 = MediaPlayer.create(context,R.raw.rain_main)
     }
 
 
-    // Try play sound
-    private fun playSound(position: Int) :Boolean {
-        Log.e("Test", "Play Sound Function")
-        //Select media-player
-        for (i in mPlayer.indices){
-            if (mPlayer[i] == -1){
-                Log.e("Test", "Media player number $i")
-                when(i){
-                    0->{
-                        mediaPlayer = MediaPlayer.create(context, list[position].raw)
-                        mediaPlayer.isLooping = true
-                        mediaPlayer.start()
-                    }
-                    1->{
-                        mediaPlayer1 = MediaPlayer.create(context, list[position].raw)
-                        mediaPlayer1.isLooping = true
-                        mediaPlayer1.start()
-                    }
-                    2->{
-                        mediaPlayer2 = MediaPlayer.create(context, list[position].raw)
-                        mediaPlayer2.isLooping = true
-                        mediaPlayer2.start()
-                    }
-                    3->{
-                        mediaPlayer3 = MediaPlayer.create(context, list[position].raw)
-                        mediaPlayer3.isLooping = true
-                        mediaPlayer3.start()
-                    }
-                }
-                mPlayer[i] = position
-                return true
-            }
-        }
-        return false
-    }
 
-    //Try stop sound
-    private fun stopSound(position: Int): Boolean {
-        Log.e("Test", "Stop Sound Function")
-        for (i in mPlayer.indices){
-            if (mPlayer[i] == position){
-                Log.e("Test", "Media Player number $i")
-                when(i){
-                    0 -> mediaPlayer.stop()
-                    1 -> mediaPlayer1.stop()
-                    2 -> mediaPlayer2.stop()
-                    3 -> mediaPlayer3.stop()
-                }
-                mPlayer[i] = -1
-                return true
-            }
-        }
-        return false
-    }
+
 
     private fun getListSound(): List<Sound> {
         val mList: MutableList<Sound> = ArrayList()
@@ -183,21 +94,18 @@ class SecondFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
 
         return mList
     }
-    //TODO Solve the problem of data loss when onResume
     override fun onResume() {
         super.onResume()
-        soundAdapter.showStatusMP()
+        //soundAdapter.showStatusMP()
     }
 
     override fun onPause() {
         super.onPause()
-        soundAdapter.stopAllMP()
+       // soundAdapter.stopAllMP()
     }
 
     override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-        if (p0 == seekVol){
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, p1, 0)
-        }
+
     }
 
     override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -207,6 +115,20 @@ class SecondFragment : Fragment(), SeekBar.OnSeekBarChangeListener {
     override fun onStopTrackingTouch(p0: SeekBar?) {
 
     }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is MyFragmentListener) {
+            listener = context
+        } else {
+            throw RuntimeException("$context must implement MyFragmentListener")
+        }
+    }
+    interface MyFragmentListener {
+        fun onSoundClick(position: Int)
+        fun getRunningList() : BooleanArray
+    }
+
 
 
 }

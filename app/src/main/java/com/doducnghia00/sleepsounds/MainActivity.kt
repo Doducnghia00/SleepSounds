@@ -14,14 +14,21 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.doducnghia00.sleepsounds.databinding.ActivityMainBinding
 import com.doducnghia00.sleepsounds.fragment.SecondFragment
 import com.doducnghia00.sleepsounds.model.Sound
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 
 class MainActivity : AppCompatActivity(), SecondFragment.MyFragmentListener{
-
-    var  soundPool: SoundPool = SoundPool.Builder().setMaxStreams(10).build()
+    private lateinit var binding: ActivityMainBinding
 
     private lateinit var list: List<Sound>
 
@@ -37,9 +44,14 @@ class MainActivity : AppCompatActivity(), SecondFragment.MyFragmentListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        //setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.nav)
+//        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.nav)
+//        val navController = findNavController(R.id.fragment)
+        val bottomNavigationView = binding.nav
         val navController = findNavController(R.id.fragment)
 
         val appBarConfiguration = AppBarConfiguration(setOf(R.id.firstFragment, R.id.secondFragment, R.id.thirdFragment))
@@ -61,60 +73,63 @@ class MainActivity : AppCompatActivity(), SecondFragment.MyFragmentListener{
 
 
     // Try play sound
-    private fun playSound(position: Int) :Boolean {
+    private suspend fun playSound(position: Int) :Boolean {
         Log.e("Test", "Play Sound Function")
-        //Select media-player
-        for (i in mPlayer.indices){
-            if (mPlayer[i] == -1){
-                Log.e("Test", "Media player number $i")
-                when(i){
-                    0->{
-                        mediaPlayer = MediaPlayer.create(this, list[position].raw)
-                        mediaPlayer.seekTo(10000)
-                        mediaPlayer.isLooping = true
-                        mediaPlayer.start()
+        return withContext(Dispatchers.Default){
+            for (i in mPlayer.indices){
+                if (mPlayer[i] == -1){
+                    Log.e("Test", "Media player number $i")
+                    when(i){
+                        0->{
+                            mediaPlayer = MediaPlayer.create(applicationContext, list[position].raw)
+                            mediaPlayer.seekTo(10000)
+                            mediaPlayer.isLooping = true
+                            mediaPlayer.start()
+                        }
+                        1->{
+                            mediaPlayer1 = MediaPlayer.create(applicationContext, list[position].raw)
+                            mediaPlayer1.isLooping = true
+                            mediaPlayer1.start()
+                        }
+                        2->{
+                            mediaPlayer2 = MediaPlayer.create(applicationContext, list[position].raw)
+                            mediaPlayer2.isLooping = true
+                            mediaPlayer2.start()
+                        }
+                        3->{
+                            mediaPlayer3 = MediaPlayer.create(applicationContext, list[position].raw)
+                            mediaPlayer3.isLooping = true
+                            mediaPlayer3.start()
+                        }
                     }
-                    1->{
-                        mediaPlayer1 = MediaPlayer.create(this, list[position].raw)
-                        mediaPlayer1.isLooping = true
-                        mediaPlayer1.start()
-                    }
-                    2->{
-                        mediaPlayer2 = MediaPlayer.create(this, list[position].raw)
-                        mediaPlayer2.isLooping = true
-                        mediaPlayer2.start()
-                    }
-                    3->{
-                        mediaPlayer3 = MediaPlayer.create(this, list[position].raw)
-                        mediaPlayer3.isLooping = true
-                        mediaPlayer3.start()
-                    }
+                    mPlayer[i] = position
+                    return@withContext true
                 }
-                mPlayer[i] = position
-                return true
             }
+            return@withContext false
         }
-        return false
     }
 
     //Try stop sound
-    private fun stopSound(position: Int): Boolean {
-        Log.e("Test", "Stop Sound Function")
-        for (i in mPlayer.indices){
-            if (mPlayer[i] == position){
-                Log.e("Test", "Media Player number $i")
-                when(i){
-                    0 -> mediaPlayer.stop()
-                    1 -> mediaPlayer1.stop()
-                    2 -> mediaPlayer2.stop()
-                    3 -> mediaPlayer3.stop()
+    private suspend fun stopSound(position: Int): Boolean {
+        return withContext(Dispatchers.Default) {
+            for (i in mPlayer.indices) {
+                if (mPlayer[i] == position) {
+                    Log.e("Test", "Media Player number $i")
+                    when(i){
+                        0 -> mediaPlayer.stop()
+                        1 -> mediaPlayer1.stop()
+                        2 -> mediaPlayer2.stop()
+                        3 -> mediaPlayer3.stop()
+                    }
+                    mPlayer[i] = -1
+                    return@withContext true
                 }
-                mPlayer[i] = -1
-                return true
             }
+            return@withContext false
         }
-        return false
     }
+
 
     fun showStatusMP(){
         Log.e("Test", "on Resume Media Player: ${mPlayer[0]} ${mPlayer[1]} ${mPlayer[2]} ${mPlayer[3]}")
@@ -128,6 +143,7 @@ class MainActivity : AppCompatActivity(), SecondFragment.MyFragmentListener{
         }
     }
 
+    //TODO runningList wrong position, isSuccess not update
     override fun onSoundClick(position: Int) {
         Log.e("Test","Activity get $position")
 
@@ -135,25 +151,34 @@ class MainActivity : AppCompatActivity(), SecondFragment.MyFragmentListener{
         if (runningList[position]){
             Log.e("Test", "Sound is running -> Try stop sound")
             runningList[position] = false
-            if (stopSound(position)) Log.e("Test", "Stopper sound")
-            //Change background color play
-            //img.setBackgroundResource(R.drawable.button_bg)
+            var isSuccess = false
+            GlobalScope.async(Dispatchers.Main) {
+                if (stopSound(position)){
+                    Log.e("Test", "Stopper sound")
+                    isSuccess = true
+                }
+            }
+            Log.e("Test","isSuccess Stop = $isSuccess")
+
         }else{ // If sound isn't running
             Log.e("Test", "Sound isn't running -> Try play sound")
-
-            if (!playSound(position)){
-                Log.e("Test","Error! Media Player Full!")
-                Toast.makeText(this,"Error! Media Player Full!", Toast.LENGTH_SHORT).show()
-            }else{
-                runningList[position] = true
-                Log.e("Test","Played sound")
-
-                //Change background color
-                //img.setBackgroundResource(R.drawable.button_bg_selected)
+            runningList[position] = true
+            var isSuccess = false
+            GlobalScope.launch(Dispatchers.Main) {
+                if (!playSound(position)){
+                    Log.e("Test","Error! Media Player Full!")
+                    Toast.makeText(applicationContext,"Error! Media Player Full!", Toast.LENGTH_SHORT).show()
+                }else{
+                    isSuccess = true
+                    Log.e("Test","Played sound")
+                }
             }
+            Log.e("Test","isSuccess Play = $isSuccess")
         }
         Log.e("Test", "Media Player: ${mPlayer[0]} ${mPlayer[1]} ${mPlayer[2]} ${mPlayer[3]}")
         Log.e("Test", "==================")
+
+
 
     }
 
